@@ -1,0 +1,30 @@
+pipeline {
+    agent {
+        docker {
+            image 'maven:3-alpine'
+            args '-v /home/mmelnik/.m2:/root/.m2'
+        }
+    }
+    stages {
+        stage('Build') {
+            steps {
+                sh 'cd characters-service && mvn -B -DskipTests clean package'
+            }
+        }
+        stage('Unit Tests') {
+            steps {
+                sh 'cd characters-service && mvn test'
+            }
+            post {
+                always {
+                    junit 'characters-service/characters-app/target/surefire-reports/*.xml'
+                }
+            }
+        }
+        stage('Deliver') {
+            steps {
+                sh './jenkins/scripts/deliver.sh'
+            }
+        }
+    }
+}
